@@ -156,49 +156,30 @@ const resolvers = {
 
 In effect, this means that as long the resource that is used as the output type for any subscriptions field may be queried from the federated data graph, then this node may be used as an entry point to that data graph to resolve non-payload fields.
 
-For the gateway data source to be accessible in `Subscription` field resolvers, we must manually add it to the request context using the `addGatewayDataSourceToSubscriptionContext` function. Note that this example uses [graphql-ws](https://github.com/enisdenjo/graphql-ws) to serve the WebSocket-enabled endpoint for subscription operations. A sample implementation may be structured as follows:
+For the gateway data source to be accessible in `Subscription` field resolvers, we must manually add it to the request context using the `addGatewayDataSourceToSubscriptionContext` function. Note that this example uses [graphql-sse](https://github.com/enisdenjo/graphql-sse) to serve the sse-enabled endpoint for subscription operations. A sample implementation may be structured as follows:
 
 ```js
 // index.js (subscriptions service)
 
-const httpServer = http.createServer(function weServeSocketsOnly(_, res) {
-  res.writeHead(404);
-  res.end();
-});
-
-const wsServer = new ws.Server({
-  server: httpServer,
-  path: "/graphql"
-});
-
-useServer(
-  {
+ const handler = createHandler({
     execute,
     subscribe,
-    context: ctx => {
-      // If a token was sent for auth purposes, retrieve it here
-      const { token } = ctx.connectionParams;
-
-      // Instantiate and initialize the GatewayDataSource subclass
-      // (data source methods will be accessible on the `gatewayApi` key)
+    onSubscribe: (ctx, msg) => {
       const liveBlogDataSource = new LiveBlogDataSource(gatewayEndpoint);
       const dataSourceContext = addGatewayDataSourceToSubscriptionContext(
         ctx,
         liveBlogDataSource
       );
-
-      // Return the complete context for the request
-      return { token: token || null, ...dataSourceContext };
-    },
-    onSubscribe: (_ctx, msg) => {
+      
+      const { token } = ctx.connectionParams;
       // Construct the execution arguments
       const args = {
+        contextValue: {token: token | null, ...dataSourceContext},
         schema,
-        operationName: msg.payload.operationName,
-        document: parse(msg.payload.query),
-        variableValues: msg.payload.variables
+        operationName: msg.operationName,
+        document: parse(msg.query),
+        variableValues: msg.variables
       };
-
       const operationAST = getOperationAST(args.document, args.operationName);
 
       // Stops the subscription and sends an error message
@@ -223,15 +204,30 @@ useServer(
       // Ready execution arguments
       return args;
     }
-  },
-  wsServer
-);
+  });
 
-httpServer.listen({ port }, () => {
-  console.log(
-    `🚀 Subscriptions ready at ws://localhost:${port}${wsServer.options.path}`
-  );
-});
+  const app = express();
+  app.all('/graphql/stream', async (req, res) => {
+     try {
+      if (req.method == 'OPTIONS') { // Handle preflight
+        res.writeHead(200, {
+           "Access-Control-Allow-Origin": "*",
+           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+           "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Length, X-Requested-With"
+        });
+        
+        
+        res.end();
+        return;
+      }
+      await handler(req, res);
+     } catch (err) {
+       console.error(err);
+       res.writeHead(500).end();
+     }
+  });
+   
+  app.listen(5001)
 ```
 
 ### Usage

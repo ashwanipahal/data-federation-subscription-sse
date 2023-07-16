@@ -68,7 +68,7 @@ import { typeDefs } from "./typeDefs";
   await gateway.load({ ...(apolloConfig && { apollo: apolloConfig }) });
 
   /**
-   * Expose GraphQL endpoint via WebSockets (for subscription operations only)
+   * Expose GraphQL endpoint via sse (for subscription operations only)
    */
   
  
