@@ -75,24 +75,17 @@ import { typeDefs } from "./typeDefs";
   const handler = createHandler({
     execute,
     subscribe,
-    context: ctx => {
-      console.log("ctx", ctx);
-      // If a token was sent for auth purposes, retrieve it here
-      // const { token } = ctx.connectionParams;
-
-      // Instantiate and initialize the GatewayDataSource subclass
-      // (data source methods will be accessible on the `gatewayApi` key)
+    onSubscribe: (ctx, msg) => {
       const liveBlogDataSource = new LiveBlogDataSource(gatewayEndpoint);
       const dataSourceContext = addGatewayDataSourceToSubscriptionContext(
         ctx,
         liveBlogDataSource
       );
-      // Return the complete context for the request
-      return { token: null, ...dataSourceContext };
-    },
-    onSubscribe: (_ctx, msg) => {
+      
+      const { token } = ctx.connectionParams;
       // Construct the execution arguments
       const args = {
+        contextValue: {token: token | null, ...dataSourceContext},
         schema,
         operationName: msg.operationName,
         document: parse(msg.query),

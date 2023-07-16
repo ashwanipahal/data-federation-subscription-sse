@@ -9,23 +9,13 @@ export const resolvers = {
       // The client may request `Post` fields that are not resolvable from the
       // payload data that was included in `pubsub.publish()`, so we must
       // provide some mechanism to fetch those additional fields when requested
-      resolve(payload, args, context, info) {
-        // const { dataSources: { gatewayApi } } = context;
-        // return gatewayApi.fetchAndMergeNonPayloadPostData(
-        //   payload.postAdded.id,
-        //   payload,
-        //   info
-        // );
-        return {
-          id: "123",
-          author: {
-            id:'1',
-            name:"ashwani"
-          },
-          content: "test",
-          publishedAt: "test",
-          title: "test"
-        };
+      resolve(payload, _args, context, info) {
+        const { dataSources: { gatewayApi } } = context;
+        return gatewayApi.fetchAndMergeNonPayloadPostData(
+          payload.postAdded.id,
+          payload,
+          info
+        );
       },
       subscribe: withFilter(
         () => pubsub.asyncIterator([POST_ADDED]),
