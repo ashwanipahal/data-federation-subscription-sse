@@ -1,7 +1,7 @@
-import { pubsub } from "../../redis";
+import { pubsub } from "../../kafka";
 import { posts } from "./data";
 
-const POST_ADDED = "POST_ADDED";
+const POST_ADDED = "graphql-sse";
 
 export const resolvers = {
   Author: {
@@ -34,7 +34,7 @@ export const resolvers = {
         publishedAt: new Date().toISOString()
       };
 
-      // Publish to `POST_ADDED` in the shared Redis instance
+      // Publish to `POST_ADDED` in the shared kafka instance
       pubsub.publish(POST_ADDED, { postAdded: post });
       posts.push(post);
       return post;
