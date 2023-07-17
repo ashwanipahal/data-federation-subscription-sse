@@ -82,7 +82,7 @@ import { typeDefs } from "./typeDefs";
         liveBlogDataSource
       );
       
-      const { token } = ctx.connectionParams;
+      const { token } = ctx.connectionParams || {};
       // Construct the execution arguments
       const args = {
         contextValue: {token: token | null, ...dataSourceContext},

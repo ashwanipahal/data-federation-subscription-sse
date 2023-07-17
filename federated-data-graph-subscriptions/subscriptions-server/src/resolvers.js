@@ -1,7 +1,7 @@
-import { pubsub } from "./redis";
+import { pubsub } from "./kafka";
 import { withFilter } from 'graphql-subscriptions';
 
-const POST_ADDED = "POST_ADDED";
+const POST_ADDED = "graphql-sse";
 
 export const resolvers = {
   Subscription: {

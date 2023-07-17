@@ -261,10 +261,10 @@ To allow the `Subscription` fields to specify return types that are defined in g
 
 **1. Gateway Server + Subgraph Services**
 
-This service contains the federated data graph. For simplicity's sake, two implementing services (for authors and posts) have been bundled with the gateway API in this service. Each implementing service connects to Redis as needed so it can publish events from mutations (the "pub" end of subscriptions). For example:
+This service contains the federated data graph. For simplicity's sake, two implementing services (for authors and posts) have been bundled with the gateway API in this service. Each implementing service connects to kafka as needed so it can publish events from mutations (the "pub" end of subscriptions). For example:
 
 ```js
-import { pubsub } from "./redis";
+import { pubsub } from "./kafka";
 
 export const resolvers = {
   // ...
@@ -280,14 +280,14 @@ export const resolvers = {
 
 **2. Subscriptions Server**
 
-This service also connects to Redis to facilitate the "sub" end of the subscriptions. This service is where the `Subscription` type and related fields are defined. As a best practice, only define a `Subscription` type and applicable resolvers in this service.
+This service also connects to kafka to facilitate the "sub" end of the subscriptions. This service is where the `Subscription` type and related fields are defined. As a best practice, only define a `Subscription` type and applicable resolvers in this service.
 
 When sending subscription data to clients, the subscription service can't automatically resolve any data beyond what's provided in the published payload from the implementing service. This means that to resolve nested types (or any other fields that aren't immediately available in the payload object), the resolvers must be defined in the subscription services to fetch this data on a field-by-field basis.
 
 There are a number of possible approaches that could be taken here, but one recommended approach is to provide an Apollo data source with methods that automatically compare the fields included in the payload against the fields requested in the operation, then selectively query the necessary field data in a single request to the gateway, and finally combine the returned data with the with original payload data to fully resolve the request. For example:
 
 ```js
-import { pubsub } from "./redis";
+import { pubsub } from "./kafka";
 
 export const resolvers = {
   Subscription: {
@@ -307,9 +307,9 @@ export const resolvers = {
 };
 ```
 
-**3. Redis**
+**3. kafka**
 
-A shared Redis instance is used to capture publications from the services behind the federated data graph as well as the subscriptions initiated in the subscriptions service, though other [`PubSub` implementations](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#pubsub-implementations) could easily be supported. Note that an in-memory pub/sub implementation will not work because it cannot be shared between the separate gateway and subscription services.
+A shared kafka instance is used to capture publications from the services behind the federated data graph as well as the subscriptions initiated in the subscriptions service, though other [`PubSub` implementations](https://www.apollographql.com/docs/apollo-server/data/subscriptions/#pubsub-implementations) could easily be supported. Note that an in-memory pub/sub implementation will not work because it cannot be shared between the separate gateway and subscription services.
 
 **4. React App**
 
