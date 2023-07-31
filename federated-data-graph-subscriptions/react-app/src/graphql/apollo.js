@@ -33,7 +33,7 @@ class SSELink extends ApolloLink {
   }
 }
 
-const wsLink = new SSELink({
+const sseLink = new SSELink({
   url: process.env.REACT_APP_SUBSCRIPTIONS_API_URL,
   onMessage: console.log,
 });
@@ -50,7 +50,7 @@ const splitLink = split(
       definition.operation === "subscription"
     );
   },
-  wsLink,
+  sseLink,
   httpLink
 );
 

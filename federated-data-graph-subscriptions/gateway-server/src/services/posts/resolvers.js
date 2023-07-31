@@ -35,6 +35,7 @@ export const resolvers = {
       };
 
       // Publish to `POST_ADDED` in the shared kafka instance
+      if(typeof post === 'object')
       pubsub.publish(POST_ADDED, { postAdded: post });
       posts.push(post);
       return post;
