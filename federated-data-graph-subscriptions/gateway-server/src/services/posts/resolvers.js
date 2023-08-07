@@ -5,7 +5,7 @@ const POST_ADDED = "graphql-sse";
 
 export const resolvers = {
   Author: {
-    posts(author, args, context, info) {
+    posts(author, _args, _context, _info) {
       return posts.filter(post => post.authorId === author.id);
     }
   },
@@ -17,16 +17,16 @@ export const resolvers = {
   },
 
   Query: {
-    post(root, { id }, context, info) {
+    post(_root, { id }, _context, _info) {
       return posts.find(post => post.id === parseInt(id));
     },
-    posts(root, args, context, info) {
+    posts() {
       return posts;
     }
   },
 
   Mutation: {
-    addPost(root, args, context, info) {
+    addPost(_root, args, _context, _info) {
       const postID = posts.length + 1;
       const post = {
         ...args,

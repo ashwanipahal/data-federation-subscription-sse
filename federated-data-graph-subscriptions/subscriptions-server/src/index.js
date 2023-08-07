@@ -20,11 +20,8 @@ import { resolvers } from "./resolvers";
 import { typeDefs } from "./typeDefs";
 
 (async () => {
-  const apolloKey = process.env.APOLLO_KEY;
-  const graphRef = process.env.APOLLO_GRAPH_REF;
   const gatewayEndpoint = process.env.GATEWAY_ENDPOINT;
   const isProd = process.env.NODE_ENV === "production";
-  const port = process.env.SUBSCRIPTIONS_SERVICE_PORT;
 
   let apolloConfig;
   let schema;
@@ -36,12 +33,11 @@ import { typeDefs } from "./typeDefs";
     debug: isProd ? false : true
   };
 
-  if (!apolloKey) {
-    gatewayOptions.serviceList = [
-      { name: "authors", url: process.env.AUTHORS_SERVICE_URL },
-      { name: "posts", url: process.env.POSTS_SERVICE_URL }
-    ];
-  }
+  
+  gatewayOptions.serviceList = [
+    { name: "authors", url: process.env.AUTHORS_SERVICE_URL },
+    { name: "posts", url: process.env.POSTS_SERVICE_URL }
+  ];
 
   const gateway = new ApolloGateway(gatewayOptions);
 
@@ -54,16 +50,14 @@ import { typeDefs } from "./typeDefs";
     });
   });
 
-  if (apolloKey) {
-    apolloConfig = getGatewayApolloConfig(apolloKey, graphRef);
-  } else {
-    // For unmanaged federation, we must set a poll interval to query the
-    // subgraph services for their schemas to detect a schema change. Polling
-    // the running endpoint for these SDLs is fairly blunt approach, so in
-    // production, a more computationally efficient approach would be
-    // preferable (or managed federation).
-    gateway.experimental_pollInterval = 36000;
-  }
+  
+  // We set a poll interval to query the
+  // subgraph services for their schemas to detect a schema change. Polling
+  // the running endpoint for these SDLs is fairly blunt approach, so in
+  // production, a more computationally efficient approach would be
+  // preferable (or managed federation).
+  gateway.experimental_pollInterval = 36000;
+  
 
   await gateway.load({ ...(apolloConfig && { apollo: apolloConfig }) });
 
@@ -81,8 +75,7 @@ import { typeDefs } from "./typeDefs";
         ctx,
         liveBlogDataSource
       );
-      
-      const { token } = ctx.connectionParams || {};
+      const token  = ctx.headers.get('authorization') || '';
       // Construct the execution arguments
       const args = {
         contextValue: {token: token | null, ...dataSourceContext},

@@ -36,6 +36,9 @@ class SSELink extends ApolloLink {
 const sseLink = new SSELink({
   url: process.env.REACT_APP_SUBSCRIPTIONS_API_URL,
   onMessage: console.log,
+  headers: {
+    authorization:"Bearer token"
+  }
 });
 
 const httpLink = new HttpLink({
